@@ -8,6 +8,8 @@ namespace StatelessTest
     {
         public TimeSpan OccupancyTimeout { get; set; }
 
+        public double Temperature { get; set; }
+
         public Area Parent { get; }
 
         public string Name { get; set; }
