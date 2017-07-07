@@ -5,6 +5,9 @@ using Stateless;
 
 namespace StatelessTest
 {
+    //TODO:
+    // https://stackoverflow.com/questions/6649983/how-to-let-a-parent-class-know-about-a-change-in-its-children
+    
 
     /// <summary>
     /// Location Class, used for storing locations within the home or garden
@@ -193,8 +196,11 @@ namespace StatelessTest
             Parent = parent;
             Children = new List<Location>();
             OccupancyTimeout = new TimeSpan(0, 0, 0, 5);
+
             parent?.Children.Add(this);
+
             _occupancyTimer = new System.Timers.Timer();
+
             _stateMachine = CreateStateMachine();
         }
 
