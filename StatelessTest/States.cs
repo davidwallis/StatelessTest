@@ -8,6 +8,7 @@
     {
         UnOccupied,
         Occupied,
-        Asleep
+        Asleep,
+        ChildOccupied
     }
 }

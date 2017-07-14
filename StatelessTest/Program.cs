@@ -13,7 +13,10 @@ namespace StatelessTest
         {
             var home = new Location(null) { Name = "Home" };
             var garden = new Location(home) { Name = "Garden" };
+
+            // ReSharper disable UnusedVariable
             var rearGarden = new Location(garden) { Name = "Rear Garden" };
+          
             var frontGarden = new Location(garden) { Name = "Front Garden" };
             var sideGarden = new Location(garden) { Name = "Side Garden" };
 
@@ -30,6 +33,7 @@ namespace StatelessTest
             var kitchen = new Location(downstairs) { Name = "kitchen" };
             var downstairsHall = new Location(downstairs) { Name = "DownstairsHall" };
             var frontRoom = new Location(downstairs) { Name = "Front Room" };
+            // ReSharper restore UnusedVariable
 
             //Create a device
             var device = CreateTestDevice();
@@ -39,37 +43,19 @@ namespace StatelessTest
 
             // try Loading XML
 
-            var dNew = LoadSettings<Device>(Path.Combine(Environment.CurrentDirectory, "devices.xml"));
+            //var dNew = LoadSettings<Device>(Path.Combine(Environment.CurrentDirectory, "devices.xml"));
 
-            var children = garden.AllChildren;
+            //var children = garden.AllChildren;
 
-            foreach (var childArea in children)
-            {
-                Console.WriteLine(childArea.Name);
-            }
+            //foreach (var childArea in children)
+            //{
+            //    Console.WriteLine(childArea.Name);
+            //}
 
-            //OccupancyStateMachine occupancy = new OccupancyStateMachine();
+
             GenerateSomeEvents(backBedroom, kitchen);
 
-            //Console.WriteLine("Occupancy status: {0}", occupancy.Status);
-            //var result = occupancy.TryUpdateState(Trigger.SensorActivity);
 
-            //Console.WriteLine("Attempt to trigger activity: {0}", result);
-            //Console.WriteLine("Occupancy status now : {0}", occupancy.Status);
-
-            System.Threading.Thread.Sleep(10000);
-
-            //result = occupancy.TryUpdateState(Trigger.AlarmPartSet);
-            //result = occupancy.TryUpdateState(Trigger.AlarmFullSet);
-
-            //Console.WriteLine("Attempt to part set alarm: {0}", result);
-            //Console.WriteLine("Occupancy status: {0}", occupancy.Status);
-
-            // result = occupancy.TryUpdateState(Trigger.AlarmUnset);
-            //Console.WriteLine("Attemp to unset alarm: {0}", result);
-            //Console.WriteLine("Occupancy status: {0}", occupancy.Status);
-
-            Console.WriteLine("Press any key");
             Console.ReadKey();
         }
 
@@ -84,18 +70,26 @@ namespace StatelessTest
 
             var serializer = new XmlSerializer(typeof(T));
 
-            // Create an XmlTextWriter using a FileStream.
-            Stream fs = new FileStream(filePath, FileMode.Create);
-            var writer = XmlWriter.Create(fs, writerSettings);
-            serializer.Serialize(writer, d);
-            writer.Close();
+            //// Create an XmlTextWriter using a FileStream.
+            //Stream fs = new FileStream(filePath, FileMode.Create);
+            //var writer = XmlWriter.Create(fs, writerSettings);
+            //serializer.Serialize(writer, d);
+            //writer.Close();
+
+            using (StreamWriter sw = new StreamWriter(File.Open(filePath, FileMode.Create)))
+            {
+                var writer = XmlWriter.Create(sw, writerSettings);
+                serializer.Serialize(writer, d);
+            }
         }
 
         private static T LoadSettings<T>(string filePath)
         {
             var serializer = new XmlSerializer(typeof(T));
-            var reader = new StreamReader(filePath);
-            return (T)serializer.Deserialize(reader);
+            using (var reader = new StreamReader(filePath))
+            {
+                return (T)serializer.Deserialize(reader);
+            }
         }
 
         private static Device CreateTestDevice()
@@ -111,11 +105,14 @@ namespace StatelessTest
 
         private static void GenerateSomeEvents(Location backBedroom, Location kitchen)
         {
+            const int amountOfActivity = 1;
+
             backBedroom.TryUpdateState(Trigger.SensorActivity);
 
             kitchen.TryUpdateState(Trigger.SensorActivity);
-            for (int i = 0; i < 30; i++)
+            for (var i = 0; i < amountOfActivity; i++)
             {
+                //spme random activity
                 if (i == 4 || i == 20)
                     backBedroom.TryUpdateState(Trigger.SensorActivity);
 

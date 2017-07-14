@@ -1,19 +1,26 @@
-﻿using System;
+﻿using Stateless;
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Linq;
-using Stateless;
 
 namespace StatelessTest
 {
     //TODO:
     // https://stackoverflow.com/questions/6649983/how-to-let-a-parent-class-know-about-a-change-in-its-children
-    
+
+    // TODO:
+    // use composite disposable for rx timer..
+    // see https://sachabarbs.wordpress.com/2013/05/16/simple-but-nice-state-machine/
+
 
     /// <summary>
     /// Location Class, used for storing locations within the home or garden
     /// </summary>
     [Serializable]
-    public class Location
+    public class Location: INotifyPropertyChanged
     {
         /// <summary>
         /// The occupancy timer
@@ -24,6 +31,8 @@ namespace StatelessTest
         /// The state machine
         /// </summary>
         private readonly StateMachine<State, Trigger> _stateMachine;
+    
+        private readonly ObservableCollection<Location> _children;
 
         /// <summary>
         /// Prevents a default instance of the <see cref="Location"/> class from being created.
@@ -37,16 +46,16 @@ namespace StatelessTest
         /// Creates the state machine.
         /// </summary>
         /// <returns></returns>
+        // TODO look how to inject this..
         private StateMachine<State, Trigger> CreateStateMachine()
         {
             var stateMachine = new StateMachine<State, Trigger>(State.UnOccupied);
 
-            // look how to inject this..
-            //stateMachine.OnTransitioned(OnTransitionedAction);
-            stateMachine.OnTransitioned((s) => { Console.WriteLine(); });
+            stateMachine.OnTransitioned(OnTransitionedAction);
 
             stateMachine.Configure(State.UnOccupied)
                 .Permit(Trigger.SensorActivity, State.Occupied)
+                .Permit(Trigger.ChildOccupied, State.ChildOccupied)
                 .PermitReentry(Trigger.AlarmFullSet);
 
             stateMachine.Configure(State.Occupied)
@@ -55,6 +64,10 @@ namespace StatelessTest
                 .Permit(Trigger.OccupancyTimerExpires, State.UnOccupied)
                 .PermitReentry(Trigger.SensorActivity)
                 .OnEntry(() => { StartTimer(stateMachine, OccupancyTimeout); });
+
+            stateMachine.Configure(State.ChildOccupied)
+                .SubstateOf(State.Occupied)
+                .PermitReentry(Trigger.ChildOccupied);
 
             stateMachine.Configure(State.Asleep)
                 .SubstateOf(State.Occupied)
@@ -66,11 +79,35 @@ namespace StatelessTest
             });
 
             // Quick test to sanity check my logic
-            string graph = stateMachine.ToDotGraph();
-            Console.WriteLine(graph);
+            //string graph = stateMachine.ToDotGraph();
+            //Console.WriteLine(graph);
 
             return stateMachine;
         }
+
+        private void OnTransitionedAction(StateMachine<State, Trigger>.Transition transition)
+        {
+            // if its the top level state, there will be no parent.
+            if (Parent == null) return;
+
+
+            // Determine the state being transitioned to
+            OccupancyState = transition.Destination;
+
+            // If the child state isn't occupped or child occupied then ignore the transition
+            if (OccupancyState != State.Occupied && OccupancyState != State.ChildOccupied) return;
+
+            
+            Console.WriteLine($"Child [{Name}] Occupied, setting parent [{Parent.Name}] state to ChildOccupied");
+
+            if (!Parent.TryUpdateState(Trigger.ChildOccupied))
+            { 
+                Console.WriteLine("Unable to update child state");
+            }
+
+        }
+
+        private State _state;
 
         /// <summary>
         /// Resets the timer.
@@ -161,7 +198,7 @@ namespace StatelessTest
         /// <value>
         /// The children.
         /// </value>
-        public List<Location> Children { get; }
+        public ObservableCollection<Location> Children => _children;
 
         /// <summary>
         /// Gets or sets the occupants.
@@ -185,7 +222,17 @@ namespace StatelessTest
         /// <value>
         /// The state of the occupancy.
         /// </value>
-        public State OccupancyState => _stateMachine.State;
+        public State OccupancyState
+        {
+            get { return _state; }
+            set
+            {
+                _state = value;
+                OnPropertyChanged("State");
+            }
+            
+        }
+        //=> _stateMachine.State;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Location"/> class.
@@ -194,13 +241,13 @@ namespace StatelessTest
         public Location(Location parent)
         {
             Parent = parent;
-            Children = new List<Location>();
+            _children = new ObservableCollection<Location>();
+            _children.CollectionChanged += CollectionChanged;
             OccupancyTimeout = new TimeSpan(0, 0, 0, 5);
 
             parent?.Children.Add(this);
 
             _occupancyTimer = new System.Timers.Timer();
-
             _stateMachine = CreateStateMachine();
         }
 
@@ -232,6 +279,40 @@ namespace StatelessTest
 
             _stateMachine.Fire(trigger);
             return true;
+        }
+        
+        private void CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.NewItems != null)
+                foreach (Location item in e.NewItems)
+                    item.PropertyChanged += Location_PropertyChanged;
+
+            if (e.OldItems != null)
+                foreach (Location item in e.OldItems)
+                    item.PropertyChanged -= Location_PropertyChanged;
+        }
+
+        /// <summary>
+        /// The reason the state transitioned
+        /// TODO testing - this might not be practical
+        /// </summary>
+        public string TransitionReason { get; set; }
+
+        void Location_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+          
+            //Console.WriteLine($"Property Name: {e.PropertyName}");
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected virtual void OnPropertyChanged(string name)
+        {
+            PropertyChangedEventHandler handler = PropertyChanged;
+            if (handler != null)
+            {
+                handler(this, new PropertyChangedEventArgs(name));
+            }
         }
     }
 }

@@ -12,6 +12,7 @@
         AlarmFullSet,
         AlarmPartSet,
         AlarmUnset,
-        OccupancyTimerExpires
+        OccupancyTimerExpires,
+        ChildOccupied
     }
 }
