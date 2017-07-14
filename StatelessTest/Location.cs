@@ -1,9 +1,6 @@
 ﻿using Stateless;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
 using System.Linq;
 
 namespace StatelessTest
@@ -20,8 +17,9 @@ namespace StatelessTest
     /// Location Class, used for storing locations within the home or garden
     /// </summary>
     [Serializable]
-    public class Location: INotifyPropertyChanged
+    public class Location
     {
+
         /// <summary>
         /// The occupancy timer
         /// </summary>
@@ -31,8 +29,6 @@ namespace StatelessTest
         /// The state machine
         /// </summary>
         private readonly StateMachine<State, Trigger> _stateMachine;
-    
-        private readonly ObservableCollection<Location> _children;
 
         /// <summary>
         /// Prevents a default instance of the <see cref="Location"/> class from being created.
@@ -60,7 +56,7 @@ namespace StatelessTest
 
             stateMachine.Configure(State.Occupied)
                 .Permit(Trigger.AlarmFullSet, State.UnOccupied)
-                .Permit(Trigger.AlarmPartSet, State.Asleep) // add time check
+                .Permit(Trigger.AlarmPartSet, State.Asleep) // add check for which part set (IE dogs or Bed)
                 .Permit(Trigger.OccupancyTimerExpires, State.UnOccupied)
                 .PermitReentry(Trigger.SensorActivity)
                 .OnEntry(() => { StartTimer(stateMachine, OccupancyTimeout); });
@@ -95,13 +91,16 @@ namespace StatelessTest
             OccupancyState = transition.Destination;
 
             // If the child state isn't occupped or child occupied then ignore the transition
-            if (OccupancyState != State.Occupied && OccupancyState != State.ChildOccupied) return;
+            // Should I be passing _stateMachine in to avoid the dependency within the method - if so how?
+            if (!_stateMachine.IsInState(State.Occupied)) return;
 
-            
+            // previous way of testing
+            // if (OccupancyState != State.Occupied && OccupancyState != State.ChildOccupied) return;
+
             Console.WriteLine($"Child [{Name}] Occupied, setting parent [{Parent.Name}] state to ChildOccupied");
 
             if (!Parent.TryUpdateState(Trigger.ChildOccupied))
-            { 
+            {
                 Console.WriteLine("Unable to update child state");
             }
 
@@ -145,6 +144,7 @@ namespace StatelessTest
                 Console.WriteLine($"{Name} Occupancy timer expired and removed");
                 if (stateMachine.IsInState(State.Occupied))
                 {
+                    Console.WriteLine("{0} in state {1}", Name, stateMachine.State);
                     stateMachine.Fire(Trigger.OccupancyTimerExpires);
                 }
             };
@@ -198,7 +198,7 @@ namespace StatelessTest
         /// <value>
         /// The children.
         /// </value>
-        public ObservableCollection<Location> Children => _children;
+        public List<Location> Children { get; }
 
         /// <summary>
         /// Gets or sets the occupants.
@@ -224,13 +224,8 @@ namespace StatelessTest
         /// </value>
         public State OccupancyState
         {
-            get { return _state; }
-            set
-            {
-                _state = value;
-                OnPropertyChanged("State");
-            }
-            
+            get => _state;
+            set => _state = value;
         }
         //=> _stateMachine.State;
 
@@ -241,8 +236,9 @@ namespace StatelessTest
         public Location(Location parent)
         {
             Parent = parent;
-            _children = new ObservableCollection<Location>();
-            _children.CollectionChanged += CollectionChanged;
+            //_children = new ObservableCollection<Location>();
+            Children = new List<Location>();
+            //  _children.CollectionChanged += CollectionChanged;
             OccupancyTimeout = new TimeSpan(0, 0, 0, 5);
 
             parent?.Children.Add(this);
@@ -280,39 +276,12 @@ namespace StatelessTest
             _stateMachine.Fire(trigger);
             return true;
         }
-        
-        private void CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            if (e.NewItems != null)
-                foreach (Location item in e.NewItems)
-                    item.PropertyChanged += Location_PropertyChanged;
 
-            if (e.OldItems != null)
-                foreach (Location item in e.OldItems)
-                    item.PropertyChanged -= Location_PropertyChanged;
-        }
 
         /// <summary>
         /// The reason the state transitioned
         /// TODO testing - this might not be practical
         /// </summary>
         public string TransitionReason { get; set; }
-
-        void Location_PropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-          
-            //Console.WriteLine($"Property Name: {e.PropertyName}");
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected virtual void OnPropertyChanged(string name)
-        {
-            PropertyChangedEventHandler handler = PropertyChanged;
-            if (handler != null)
-            {
-                handler(this, new PropertyChangedEventArgs(name));
-            }
-        }
     }
 }

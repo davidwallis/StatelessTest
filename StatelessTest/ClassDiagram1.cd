@@ -3,10 +3,9 @@
   <Class Name="StatelessTest.Location">
     <Position X="0.5" Y="0.5" Width="3" />
     <TypeIdentifier>
-      <HashCode>CAEQAAQAAAQAIAgAIAAEyAQQgABAEAAAAACACgAEAAg=</HashCode>
+      <HashCode>CAEQAAAAAAQAIAgAAAAESAQQAABAEAAAAACACgAEAAg=</HashCode>
       <FileName>Location.cs</FileName>
     </TypeIdentifier>
-    <Lollipop Position="0.2" />
   </Class>
   <Font Name="Segoe UI" Size="9" />
 </ClassDiagram>
