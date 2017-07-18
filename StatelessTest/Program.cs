@@ -35,9 +35,14 @@ namespace StatelessTest
             var frontRoom = new Location(downstairs) { Name = "Front Room" };
             // ReSharper restore UnusedVariable
 
+            // store locations
+            SaveSettings<Location>(home, Path.Combine(Environment.CurrentDirectory, "locations.xml"));
+
+            var locNew = LoadSettings<Location>(Path.Combine(Environment.CurrentDirectory, "locations.xml"));
+
+
             //Create a device
             var device = CreateTestDevice();
-
             // Save device to devices.xml
             SaveSettings<Device>(device, Path.Combine(Environment.CurrentDirectory, "devices.xml"));
 

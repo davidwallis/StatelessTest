@@ -47,7 +47,7 @@ namespace StatelessTest
         {
             var stateMachine = new StateMachine<State, Trigger>(State.UnOccupied);
 
-            stateMachine.OnTransitioned(OnTransitionedAction);
+           // stateMachine.OnTransitioned(OnTransitionedAction);
 
             stateMachine.Configure(State.UnOccupied)
                 .Permit(Trigger.SensorActivity, State.Occupied)
@@ -59,7 +59,18 @@ namespace StatelessTest
                 .Permit(Trigger.AlarmPartSet, State.Asleep) // add check for which part set (IE dogs or Bed)
                 .Permit(Trigger.OccupancyTimerExpires, State.UnOccupied)
                 .PermitReentry(Trigger.SensorActivity)
-                .OnEntry(() => { StartTimer(stateMachine, OccupancyTimeout); });
+                .OnEntry(() =>
+                {
+                    StartTimer(stateMachine, OccupancyTimeout);
+                    if (Parent == null) return;
+                    if (Parent.TryUpdateState(Trigger.ChildOccupied))
+                    {
+                        Console.WriteLine($"Child [{Name}] Occupied, setting parent [{Parent.Name}] state to ChildOccupied");
+                    }
+                    else { 
+                        Console.WriteLine("Unable to update child state");
+                    }
+                });
 
             stateMachine.Configure(State.ChildOccupied)
                 .SubstateOf(State.Occupied)
@@ -75,8 +86,7 @@ namespace StatelessTest
             });
 
             // Quick test to sanity check my logic
-            //string graph = stateMachine.ToDotGraph();
-            //Console.WriteLine(graph);
+            //Console.WriteLine(stateMachine.ToDotGraph());
 
             return stateMachine;
         }
