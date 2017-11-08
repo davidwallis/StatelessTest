@@ -67,7 +67,8 @@ namespace StatelessTest
                     {
                         Console.WriteLine($"Child [{Name}] Occupied, setting parent [{Parent.Name}] state to ChildOccupied");
                     }
-                    else { 
+                    else
+                    { 
                         Console.WriteLine("Unable to update child state");
                     }
                 });

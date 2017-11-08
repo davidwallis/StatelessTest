@@ -1,4 +1,10 @@
-﻿using Stateless;
+﻿// <copyright file="OccupancyStateMachine.cs" company="David Wallis">
+// Copyright (c) David Wallis. All rights reserved.
+// Licensed under the MIT license. See LICENSE.md file in the project root for full license information.
+// https://www.github.com/davidwallis3101
+// </copyright>
+
+using Stateless;
 using System;
 using System.Reactive.Linq;
 
