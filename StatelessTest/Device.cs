@@ -4,24 +4,24 @@ using System.Collections.Generic;
 namespace StatelessTest
 {
     /// <summary>
-    /// Stores devices such as phones, tablets, computers that can be used to determine presence.
+    /// Defines the <see cref="Device" />
     /// </summary>
-    /// <param>The friendly name of the device
-    ///     <name>Name</name>
-    /// </param>
-    /// <param>Contains notes / a description of the device
-    ///     <name>Notes</name>
-    /// </param>
-    /// <param>The hardware addresses of the device, Eg Ethernet and Bluetooth
-    ///     <name>Address</name>
-    /// </param>
-    /// that contains all the
-    /// data for updating>/param>
     [Serializable]
     public class Device
     {
+        /// <summary>
+        /// Gets or sets the name of the device
+        /// </summary>
         public string Name { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Notes
+        /// </summary>
         public string Notes { get; set; }
-        public List<string> Address { get; set; }
+
+        /// <summary>
+        /// Gets or sets the List of Addresses
+        /// </summary>
+        public List<string> AddressList { get; set; }
     }
 }

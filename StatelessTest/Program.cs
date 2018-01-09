@@ -40,7 +40,6 @@ namespace StatelessTest
 
             var locNew = LoadSettings<Location>(Path.Combine(Environment.CurrentDirectory, "locations.xml"));
 
-
             //Create a device
             var device = CreateTestDevice();
             // Save device to devices.xml
@@ -102,7 +101,7 @@ namespace StatelessTest
             var d = new Device
             {
                 Name = "David's Phone",
-                Address = new List<string> { "00:AD:32:43:34:12" },
+                AddressList = new List<string> { "00:AD:32:43:34:12" },
                 Notes = "Davids Samsung phone"
             };
             return d;

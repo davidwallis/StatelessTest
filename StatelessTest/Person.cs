@@ -3,17 +3,25 @@ using System.Collections.Generic;
 
 namespace StatelessTest
 {
+    /// <summary>
+    /// Defines the <see cref="Person" />
+    /// </summary>
     [Serializable]
     public class Person
     {
-        public string Name { get; set; }
         /// <summary>
-        /// Gets or sets the preferred temperature. (Example usage scenario)
+        /// Gets or sets the Name
         /// </summary>
-        /// <value>
-        /// The persons preferred temperature.
-        /// </value>
+        public string Name { get; set; }
+
+        /// <summary>
+        /// Gets or sets the PreferredTemperature
+        /// </summary>
         public double PreferredTemperature { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Devices
+        /// </summary>
         public List<Device> Devices { get; set; }
     }
 }
