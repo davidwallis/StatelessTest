@@ -48,7 +48,6 @@ namespace StatelessTest
             // try Loading XML
 
             //var dNew = LoadSettings<Device>(Path.Combine(Environment.CurrentDirectory, "devices.xml"));
-
             //var children = garden.AllChildren;
 
             //foreach (var childArea in children)
