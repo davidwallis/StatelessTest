@@ -1,7 +1,10 @@
 ﻿using Stateless;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Xml;
+using System.Xml.Serialization;
 
 namespace StatelessTest
 {
@@ -118,6 +121,7 @@ namespace StatelessTest
         }
 
         private State _state;
+        private TimeSpan m_OccupancyTimeout;
 
         /// <summary>
         /// Resets the timer.
@@ -163,13 +167,29 @@ namespace StatelessTest
             Console.WriteLine($"{Name} Occupancy timer started");
         }
 
+        ///// <summary>
+        ///// Gets or sets the occupancy timeout.
+        ///// </summary>
+        ///// <value>
+        ///// The occupancy timeout.
+        ///// </value>
+        [XmlIgnore]
+        public TimeSpan OccupancyTimeout
+        {
+            get => this.m_OccupancyTimeout;
+            set => this.m_OccupancyTimeout = value;
+        }
+
         /// <summary>
-        /// Gets or sets the occupancy timeout.
+        /// Gets or sets the string representation of the timeSpan, XMLSerialisation doesnt support Timespan, so use this property for serialization instead.
         /// </summary>
-        /// <value>
-        /// The occupancy timeout.
-        /// </value>
-        public TimeSpan OccupancyTimeout { get; set; }
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [XmlElement(DataType = "duration", ElementName = "OccupancyTimeout")]
+        public string OccupancyTimeoutString
+        {
+            get => XmlConvert.ToString(this.OccupancyTimeout);
+            set => this.OccupancyTimeout = string.IsNullOrEmpty(value) ? TimeSpan.Zero : XmlConvert.ToTimeSpan(value);
+        }
 
         /// <summary>
         /// Gets or sets the temperature.
@@ -209,7 +229,7 @@ namespace StatelessTest
         /// <value>
         /// The children.
         /// </value>
-        public List<Location> Children { get; }
+        public List<Location> Children { get; set; }
 
         /// <summary>
         /// Gets or sets the occupants.

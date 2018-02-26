@@ -35,6 +35,8 @@ namespace StatelessTest
             //var frontRoom = new Location(downstairs) { Name = "Front Room" };
             // ReSharper restore UnusedVariable
 
+
+
             var locations = new List<Location>();
             locations.Add(new Location(null) { Name = "Home" });
 
@@ -57,13 +59,16 @@ namespace StatelessTest
             locations.Add(new Location(locations.Find(x => x.Name == "upstairs")) { Name = "Upstairs Hall" });
 
             locations.Add(new Location(locations.Find(x => x.Name == "downstairs")) { Name = "Kitchen" });
-            locations.Add(new Location(locations.Find(x => x.Name == "downstairs")) { Name = "DownstairsHall" });
+            locations.Add(new Location(locations.Find(x => x.Name == "downstairs")) { Name = "Downstairs Hall" });
             locations.Add(new Location(locations.Find(x => x.Name == "downstairs")) { Name = "Front Room" });
 
             // store locations
-            //SaveSettings<List<Location>>(locations, Path.Combine(Environment.CurrentDirectory, "locations.xml"));
+            SaveSettings<List<Location>>(locations, Path.Combine(Environment.CurrentDirectory, "locations.xml"));
 
-            //var locNew = LoadSettings<Location>(Path.Combine(Environment.CurrentDirectory, "locations.xml"));
+
+            // https://social.msdn.microsoft.com/Forums/en-US/c7b7dc5c-b780-49b9-95c9-b637f46c4d68/datacontractserializer-deserialize-a-class-with-a-listt?forum=csharplanguage
+
+            var locNew = LoadSettings<List<Location>>(Path.Combine(Environment.CurrentDirectory, "locations.xml"));
 
             //Create a device
             var device = CreateTestDevice();
