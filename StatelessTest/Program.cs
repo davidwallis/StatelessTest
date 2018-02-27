@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
@@ -63,67 +65,75 @@ namespace StatelessTest
             locations.Add(new Location(locations.Find(x => x.Name == "downstairs")) { Name = "Front Room" });
 
             // store locations
-            SaveSettings<List<Location>>(locations, Path.Combine(Environment.CurrentDirectory, "locations.xml"));
+            BinarySerialize(locations);
+            locations = null;
 
 
             // https://social.msdn.microsoft.com/Forums/en-US/c7b7dc5c-b780-49b9-95c9-b637f46c4d68/datacontractserializer-deserialize-a-class-with-a-listt?forum=csharplanguage
+            // https://www.bytefish.de/blog/enums_json_net/
+            // https://stackoverflow.com/questions/353558/create-pointer-to-parent-object-in-deserialization-process-in-c-sharp
 
-            var locNew = LoadSettings<List<Location>>(Path.Combine(Environment.CurrentDirectory, "locations.xml"));
 
-            //Create a device
-            var device = CreateTestDevice();
-            // Save device to devices.xml
-            //SaveSettings<Device>(device, Path.Combine(Environment.CurrentDirectory, "devices.xml"));
+            var loc = BinaryDeserialise();
 
-            // try Loading XML
-
-            //var dNew = LoadSettings<Device>(Path.Combine(Environment.CurrentDirectory, "devices.xml"));
-            //var children = garden.AllChildren;
-
-            //foreach (var childArea in children)
-            //{
-            //    Console.WriteLine(childArea.Name);
-            //}
 
 
             // GenerateSomeEvents(backBedroom, kitchen);
-            GenerateSomeEvents2(locations.Find(x => x.Name == "Back Bedroom"), locations.Find(x => x.Name == "Kitchen"));
+            GenerateSomeEvents2(loc.Find(x => x.Name == "Back Bedroom"), loc.Find(x => x.Name == "Kitchen"));
 
 
             Console.ReadKey();
         }
 
-        private static void SaveSettings<T>(object d, string filePath)
+        private static void BinarySerialize(List<Location> locations)
         {
-            // export
-            var writerSettings = new XmlWriterSettings
+            using (var fs = new FileStream("DataFile.dat", FileMode.Create))
             {
-                Indent = true,
-                Encoding = Encoding.UTF8
-            };
-
-            var serializer = new XmlSerializer(typeof(T));
-
-            //// Create an XmlTextWriter using a FileStream.
-            //Stream fs = new FileStream(filePath, FileMode.Create);
-            //var writer = XmlWriter.Create(fs, writerSettings);
-            //serializer.Serialize(writer, d);
-            //writer.Close();
-
-            using (StreamWriter sw = new StreamWriter(File.Open(filePath, FileMode.Create)))
-            {
-                var writer = XmlWriter.Create(sw, writerSettings);
-                serializer.Serialize(writer, d);
+                var formatter = new BinaryFormatter();
+                try
+                {
+                    formatter.Serialize(fs, locations);
+                }
+                catch (SerializationException e)
+                {
+                    Console.WriteLine("Failed to serialize. Reason: " + e.Message);
+                    throw;
+                }
+                finally
+                {
+                    fs.Close();
+                }
             }
         }
 
-        private static T LoadSettings<T>(string filePath)
+        private static List<Location> BinaryDeserialise()
         {
-            var serializer = new XmlSerializer(typeof(T));
-            using (var reader = new StreamReader(filePath))
+            List<Location> deserializedLocations = null;
+
+            // Open the file containing the data that you want to deserialize.
+            using (var fs = new FileStream("DataFile.dat", FileMode.Open))
             {
-                return (T)serializer.Deserialize(reader);
+                try
+                {
+                    var formatter = new BinaryFormatter();
+
+                    // Deserialize the hashtable from the file and 
+                    // assign the reference to the local variable.
+                    deserializedLocations = (List<Location>)formatter.Deserialize(fs);
+                }
+                catch (SerializationException e)
+                {
+                    Console.WriteLine("Failed to deserialize. Reason: " + e.Message);
+                    throw;
+                }
+                finally
+                {
+                    fs.Close();
+                }
             }
+
+
+            return deserializedLocations;
         }
 
         private static Device CreateTestDevice()

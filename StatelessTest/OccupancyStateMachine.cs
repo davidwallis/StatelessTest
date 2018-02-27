@@ -10,6 +10,7 @@ using System.Reactive.Linq;
 
 namespace StatelessTest
 {
+    [Serializable]
     public class OccupancyStateMachine
     {
         private readonly StateMachine<State, Trigger> _stateMachine;

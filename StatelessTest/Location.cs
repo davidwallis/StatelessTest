@@ -26,11 +26,13 @@ namespace StatelessTest
         /// <summary>
         /// The occupancy timer
         /// </summary>
+        [NonSerialized]
         private readonly System.Timers.Timer _occupancyTimer;
 
         /// <summary>
         /// The state machine
         /// </summary>
+        [NonSerialized]
         private readonly StateMachine<State, Trigger> _stateMachine;
 
         /// <summary>
