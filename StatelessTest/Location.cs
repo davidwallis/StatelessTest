@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Xml;
 using System.Xml.Serialization;
 
@@ -23,17 +24,43 @@ namespace StatelessTest
     public class Location
     {
 
+        //[OnDeserializing()]
+        //internal void OnDeserializingMethod(StreamingContext context)
+        //{
+        //    // System.Console.WriteLine("SerRoot.OnDeserializingMethod");
+        //}
+
+        [OnDeserialized()]
+        internal void OnDeserializedMethod(StreamingContext context)
+        {
+            // System.Console.WriteLine("SerRoot.OnDeserializedMethod");
+            _occupancyTimer = new System.Timers.Timer();
+            _stateMachine = CreateStateMachine();
+        }
+
+        //[OnSerializing()]
+        //internal void OnSerializingMethod(StreamingContext context)
+        //{
+        //    System.Console.WriteLine("SerRoot.OnSerializingMethod");
+        //}
+
+        //[OnSerialized()]
+        //internal void OnSerializedMethod(StreamingContext context)
+        //{
+        //    System.Console.WriteLine("SerRoot.OnSerializedMethod");
+        //}
+
         /// <summary>
         /// The occupancy timer
         /// </summary>
         [NonSerialized]
-        private readonly System.Timers.Timer _occupancyTimer;
+        private System.Timers.Timer _occupancyTimer;
 
         /// <summary>
         /// The state machine
         /// </summary>
         [NonSerialized]
-        private readonly StateMachine<State, Trigger> _stateMachine;
+        private StateMachine<State, Trigger> _stateMachine;
 
         /// <summary>
         /// Prevents a default instance of the <see cref="Location"/> class from being created.
@@ -161,7 +188,7 @@ namespace StatelessTest
                 Console.WriteLine($"{Name} Occupancy timer expired and removed");
                 if (stateMachine.IsInState(State.Occupied))
                 {
-                    Console.WriteLine("{0} in state {1}", Name, stateMachine.State);
+                    Console.WriteLine("{0} in state {1} - Firing OccupancyTimerExpires", Name, stateMachine.State);
                     stateMachine.Fire(Trigger.OccupancyTimerExpires);
                 }
             };

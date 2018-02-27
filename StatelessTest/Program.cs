@@ -72,7 +72,7 @@ namespace StatelessTest
             // https://social.msdn.microsoft.com/Forums/en-US/c7b7dc5c-b780-49b9-95c9-b637f46c4d68/datacontractserializer-deserialize-a-class-with-a-listt?forum=csharplanguage
             // https://www.bytefish.de/blog/enums_json_net/
             // https://stackoverflow.com/questions/353558/create-pointer-to-parent-object-in-deserialization-process-in-c-sharp
-
+            Console.WriteLine("Loading....");
 
             var loc = BinaryDeserialise();
 
