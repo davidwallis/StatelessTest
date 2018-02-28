@@ -24,6 +24,8 @@ namespace StatelessTest
             Console.WriteLine("Loading data....");
             var loc = SerializationHelper.BinaryDeserialise();
             loc.Find(x => x.Name == "Home").OccupancyTimeout = new TimeSpan(0,0,30);
+            Console.WriteLine(loc.Find(x => x.Name == "Home").StateMachineAsDotGraph);
+            
             SerializationHelper.BinarySerialize(loc);
             loc.Find(x => x.Name == "Kitchen").TryUpdateState(Trigger.SensorActivity);
             //foreach (var l in loc)

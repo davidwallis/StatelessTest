@@ -99,11 +99,14 @@ namespace StatelessTest
                 {
                     Console.WriteLine($"[{Name}] Occupied, Turn Lights On");
                     this.StartTimer(this.stateMachine, this.OccupancyTimeout);
-                    if (this.Parent == null) { return; }
+                    if (this.Parent == null) // Top level object - no parent
+                    {
+                        return;
+                    }
 
                     if (this.Parent.TryUpdateState(Trigger.ChildOccupied))
                     {
-                        //Console.WriteLine($"Child [{Name}] Occupied, setting parent [{Parent.Name}] state to ChildOccupied");
+                        Console.WriteLine($"[{Name}] Occupied, setting parent [{Parent.Name}] state to ChildOccupied");
                     }
                 })
                 .OnExit(() =>
@@ -113,19 +116,18 @@ namespace StatelessTest
 
             stateMachine.Configure(State.ChildOccupied)
                 .SubstateOf(State.Occupied)
-                .PermitReentry(Trigger.ChildOccupied);
+                .PermitReentry(Trigger.ChildOccupied)
+                .OnEntry(() => { Console.WriteLine($"{Name} has an occupied child"); });
 
             stateMachine.Configure(State.Asleep)
                 .SubstateOf(State.Occupied)
-                .Permit(Trigger.AlarmUnset, State.Occupied);
+                .Permit(Trigger.AlarmUnset, State.Occupied)
+                .OnEntry(() => { Console.WriteLine($"{Name} asleep"); });
 
             stateMachine.OnUnhandledTrigger((state, trigger) =>
             {
                 Console.WriteLine("Unhandled: '{0}' state, '{1}' trigger!");
             });
-
-            // Quick test to sanity check my logic
-            //Console.WriteLine(stateMachine.ToDotGraph());
 
             return stateMachine;
         }
@@ -371,17 +373,21 @@ namespace StatelessTest
         public bool TryUpdateState(Trigger trigger)
         {
             if (!stateMachine.CanFire(trigger))
+            {
+                Console.WriteLine($"Unable to firetrigger {trigger}");
                 return false;
+            }
 
             stateMachine.Fire(trigger);
             return true;
         }
-
-
         /// <summary>
         /// The reason the state transitioned
         /// TODO testing - this might not be practical
         /// </summary>
         public string TransitionReason { get; set; }
+
+        public string StateMachineAsDotGraph => stateMachine.ToDotGraph();
+
     }
 }
