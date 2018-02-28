@@ -33,9 +33,9 @@ namespace StatelessTest
         [OnDeserialized()]
         internal void OnDeserializedMethod(StreamingContext context)
         {
-            // System.Console.WriteLine("SerRoot.OnDeserializedMethod");
             this._occupancyTimer = new System.Timers.Timer();
-            this._stateMachine = this.CreateStateMachine(this.OccupancyState);
+            this.stateMachine = this.CreateStateMachine(this.OccupancyState);
+            this.ResumeTimer(this.stateMachine, this.OccupancyTimeout);
         }
 
         //[OnSerializing()]
@@ -60,7 +60,7 @@ namespace StatelessTest
         /// The state machine
         /// </summary>
         [NonSerialized]
-        private StateMachine<State, Trigger> _stateMachine;
+        private StateMachine<State, Trigger> stateMachine;
 
         /// <summary>
         /// Prevents a default instance of the <see cref="Location"/> class from being created.
@@ -77,32 +77,38 @@ namespace StatelessTest
         // TODO look how to inject this..
         private StateMachine<State, Trigger> CreateStateMachine(State initialState = State.UnOccupied)
         {
-            var stateMachine = new StateMachine<State, Trigger>(initialState);
+            stateMachine = new StateMachine<State, Trigger>(initialState);
 
             // stateMachine.OnTransitioned(OnTransitionedAction);
 
             stateMachine.Configure(State.UnOccupied)
                 .Permit(Trigger.SensorActivity, State.Occupied)
                 .Permit(Trigger.ChildOccupied, State.ChildOccupied)
-                .PermitReentry(Trigger.AlarmFullSet);
+                .PermitReentry(Trigger.AlarmFullSet)
+                .OnEntry(() =>
+                {
+                    Console.WriteLine($"[{Name}] UnOccupied, Turn Lights Off");
+                });
 
-            stateMachine.Configure(State.Occupied)
+                stateMachine.Configure(State.Occupied)
                 .Permit(Trigger.AlarmFullSet, State.UnOccupied)
                 .Permit(Trigger.AlarmPartSet, State.Asleep) // add check for which part set (IE dogs or Bed)
                 .Permit(Trigger.OccupancyTimerExpires, State.UnOccupied)
                 .PermitReentry(Trigger.SensorActivity)
                 .OnEntry(() =>
                 {
-                    StartTimer(stateMachine, OccupancyTimeout);
-                    if (Parent == null) return;
-                    if (Parent.TryUpdateState(Trigger.ChildOccupied))
+                    Console.WriteLine($"[{Name}] Occupied, Turn Lights On");
+                    this.StartTimer(this.stateMachine, this.OccupancyTimeout);
+                    if (this.Parent == null) { return; }
+
+                    if (this.Parent.TryUpdateState(Trigger.ChildOccupied))
                     {
-                        Console.WriteLine($"Child [{Name}] Occupied, setting parent [{Parent.Name}] state to ChildOccupied");
+                        //Console.WriteLine($"Child [{Name}] Occupied, setting parent [{Parent.Name}] state to ChildOccupied");
                     }
-                    else
-                    { 
-                        Console.WriteLine("Unable to update child state");
-                    }
+                })
+                .OnExit(() =>
+                {
+                    Console.WriteLine($"{this.Name} OnExit");
                 });
 
             stateMachine.Configure(State.ChildOccupied)
@@ -124,30 +130,29 @@ namespace StatelessTest
             return stateMachine;
         }
 
-        private void OnTransitionedAction(StateMachine<State, Trigger>.Transition transition)
-        {
-            // if its the top level state, there will be no parent.
-            if (Parent == null) return;
+        //private void OnTransitionedAction(StateMachine<State, Trigger>.Transition transition)
+        //{
+        //    // if its the top level state, there will be no parent.
+        //    if (Parent == null) return;
 
+        //    // Determine the state being transitioned to
+        //    //OccupancyState = transition.Destination;
 
-            // Determine the state being transitioned to
-            OccupancyState = transition.Destination;
+        //    // If the child state isn't occupped or child occupied then ignore the transition
+        //    // Should I be passing _stateMachine in to avoid the dependency within the method - if so how?
+        //    if (!stateMachine.IsInState(State.Occupied)) return;
 
-            // If the child state isn't occupped or child occupied then ignore the transition
-            // Should I be passing _stateMachine in to avoid the dependency within the method - if so how?
-            if (!_stateMachine.IsInState(State.Occupied)) return;
+        //    // previous way of testing
+        //    // if (OccupancyState != State.Occupied && OccupancyState != State.ChildOccupied) return;
 
-            // previous way of testing
-            // if (OccupancyState != State.Occupied && OccupancyState != State.ChildOccupied) return;
+        //    Console.WriteLine($"Child [{Name}] Occupied, setting parent [{Parent.Name}] state to ChildOccupied");
 
-            Console.WriteLine($"Child [{Name}] Occupied, setting parent [{Parent.Name}] state to ChildOccupied");
+        //    if (!Parent.TryUpdateState(Trigger.ChildOccupied))
+        //    {
+        //        Console.WriteLine("Unable to update child state");
+        //    }
 
-            if (!Parent.TryUpdateState(Trigger.ChildOccupied))
-            {
-                Console.WriteLine("Unable to update child state");
-            }
-
-        }
+        //}
 
         private State _state;
         private TimeSpan m_OccupancyTimeout;
@@ -169,7 +174,7 @@ namespace StatelessTest
         /// <param name="occupancyTimeout">The occupancy timeout.</param>
         private void StartTimer(StateMachine<State, Trigger> stateMachine, TimeSpan occupancyTimeout)
         {
-            // If the occupancy timer is allready running, restart it
+            // If the occupancy timer is already running, restart it
             if (IsTimerRunning)
             {
                 ResetTimer();
@@ -196,13 +201,38 @@ namespace StatelessTest
             Console.WriteLine($"{Name} Occupancy timer started");
         }
 
-        ///// <summary>
-        ///// Gets or sets the occupancy timeout.
-        ///// </summary>
-        ///// <value>
-        ///// The occupancy timeout.
-        ///// </value>
-        [XmlIgnore]
+        private void ResumeTimer(StateMachine<State, Trigger> stateMachine, TimeSpan occupancyTimeout)
+        {
+            // was the occupancy timer already running? restart it
+            if (!this.IsTimerRunning || this._occupancyTimer.Enabled ) { return; }
+
+            Console.WriteLine($"Resuming timer in [{this.Name}] for {occupancyTimeout.TotalSeconds} Seconds");
+
+            // Configure the timer object
+            _occupancyTimer.Interval = occupancyTimeout.TotalMilliseconds;
+            _occupancyTimer.Elapsed += (sender, e) =>
+            {
+                _occupancyTimer.Stop();
+                IsTimerRunning = false;
+
+                Console.WriteLine($"{Name} Occupancy timer expired and removed");
+                if (stateMachine.IsInState(State.Occupied))
+                {
+                    Console.WriteLine("{0} in state {1} - Firing OccupancyTimerExpires", Name, stateMachine.State);
+                    stateMachine.Fire(Trigger.OccupancyTimerExpires);
+                }
+            };
+            _occupancyTimer.Start();
+            Console.WriteLine($"{Name} Occupancy timer started");
+        }
+
+        /////// <summary>
+        /////// Gets or sets the occupancy timeout.
+        /////// </summary>
+        /////// <value>
+        /////// The occupancy timeout.
+        /////// </value>
+        //[XmlIgnore]
         public TimeSpan OccupancyTimeout
         {
             get => this.m_OccupancyTimeout;
@@ -282,12 +312,21 @@ namespace StatelessTest
         /// <value>
         /// The state of the occupancy.
         /// </value>
-        public State OccupancyState
-        {
-            get => _state;
-            set => _state = value;
-        }
-        //=> _stateMachine.State;
+        public State OccupancyState => stateMachine?.State ?? State.UnOccupied;
+
+        /// <summary>
+        /// Gets the state of the occupancy.
+        /// </summary>
+        /// <value>
+        /// The state of the occupancy.
+        /// </value>
+        //public State OccupancyState
+        //{
+        //    get => _state;
+        //    set => _state = value;
+        //}
+
+        //public State OccupancyState => stateMachine.State;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Location"/> class.
@@ -298,13 +337,14 @@ namespace StatelessTest
             Parent = parent;
             //_children = new ObservableCollection<Location>();
             Children = new List<Location>();
+
             //  _children.CollectionChanged += CollectionChanged;
             OccupancyTimeout = new TimeSpan(0, 0, 0, 5);
 
             parent?.Children.Add(this);
 
             _occupancyTimer = new System.Timers.Timer();
-            _stateMachine = CreateStateMachine();
+            stateMachine = CreateStateMachine();
         }
 
         /// <summary>
@@ -330,10 +370,10 @@ namespace StatelessTest
         /// <returns></returns>
         public bool TryUpdateState(Trigger trigger)
         {
-            if (!_stateMachine.CanFire(trigger))
+            if (!stateMachine.CanFire(trigger))
                 return false;
 
-            _stateMachine.Fire(trigger);
+            stateMachine.Fire(trigger);
             return true;
         }
 

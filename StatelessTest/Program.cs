@@ -23,23 +23,22 @@ namespace StatelessTest
 
             Console.WriteLine("Loading data....");
             var loc = SerializationHelper.BinaryDeserialise();
-            loc.Find(x => x.Name == "Kitchen").TryUpdateState(Trigger.SensorActivity);
+            loc.Find(x => x.Name == "Home").OccupancyTimeout = new TimeSpan(0,0,30);
             SerializationHelper.BinarySerialize(loc);
-
-
-            foreach (var l in loc)
-            {
-                string parentName = string.Empty;
-                if (l.Parent == null)
-                {
-                    parentName = "Root";
-                }
-                else
-                {
-                    parentName = l.Parent.Name;
-                }
-                Console.WriteLine($"Location: {l.Name} Parent: {parentName} State: {l.OccupancyState}");
-            }
+            loc.Find(x => x.Name == "Kitchen").TryUpdateState(Trigger.SensorActivity);
+            //foreach (var l in loc)
+            //{
+            //    string parentName = string.Empty;
+            //    if (l.Parent == null)
+            //    {
+            //        parentName = "Root";
+            //    }
+            //    else
+            //    {
+            //        parentName = l.Parent.Name;
+            //    }
+            //    Console.WriteLine($"Location: {l.Name} Parent: {parentName} State: {l.OccupancyState}");
+            //}
 
 
             Console.WriteLine("Press any key to generate data\n");
