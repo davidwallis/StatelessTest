@@ -73,6 +73,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Device.cs" />
+    <Compile Include="GenerateAndSerialize.cs" />
     <Compile Include="Location.cs" />
     <Compile Include="ModuleReference.cs" />
     <Compile Include="OccupancyStateMachine.cs" />
@@ -80,6 +81,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\Annotations.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SerializationHelper.cs" />
     <Compile Include="States.cs" />
     <Compile Include="Triggers.cs" />
   </ItemGroup>

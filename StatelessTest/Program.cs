@@ -13,71 +13,37 @@ namespace StatelessTest
     {
         private static void Main()
         {
-            //var home = new Location(null) { Name = "Home" };
-            //var garden = new Location(home) { Name = "Garden" };
 
-            //// ReSharper disable UnusedVariable
-            //var rearGarden = new Location(garden) { Name = "Rear Garden" };
-
-            //var frontGarden = new Location(garden) { Name = "Front Garden" };
-            //var sideGarden = new Location(garden) { Name = "Side Garden" };
-
-            //var house = new Location(home) { Name = "House" };
-            //var upstairs = new Location(house) { Name = "Upstairs" };
-            //var downstairs = new Location(house) { Name = "Downstairs" };
-
-            //var frontBedroom = new Location(upstairs) { Name = "Front Bedroom" };
-            //var backBedroom = new Location(upstairs) { Name = "Back Bedroom" };
-            //var office = new Location(upstairs) { Name = "Office" };
-            //var bathroom = new Location(upstairs) { Name = "Bathroom" };
-            //var upstairsHall = new Location(upstairs) { Name = "Upstairs Hall" };
-
-            //var kitchen = new Location(downstairs) { Name = "kitchen" };
-            //var downstairsHall = new Location(downstairs) { Name = "DownstairsHall" };
-            //var frontRoom = new Location(downstairs) { Name = "Front Room" };
-            // ReSharper restore UnusedVariable
-
-
-
-            var locations = new List<Location>();
-            locations.Add(new Location(null) { Name = "Home" });
-
-
-            locations.Add(new Location(locations.Find(x => x.Name == "Home")) { Name = "House" });
-            locations.Add(new Location(locations.Find(x => x.Name == "Home")) { Name = "Garden" });
-
-            locations.Add(new Location(locations.Find(x => x.Name == "Garden")) { Name = "Rear Garden" });
-            locations.Add(new Location(locations.Find(x => x.Name == "Garden")) { Name = "Front Garden" });
-            locations.Add(new Location(locations.Find(x => x.Name == "Garden")) { Name = "Side Garden" });
-
-            locations.Add(new Location(locations.Find(x => x.Name == "Home")) { Name = "House" });
-            locations.Add(new Location(locations.Find(x => x.Name == "House")) { Name = "Upstairs" });
-            locations.Add(new Location(locations.Find(x => x.Name == "House")) { Name = "Downstairs" });
-
-            locations.Add(new Location(locations.Find(x => x.Name == "Upstairs")) { Name = "Front Bedroom" });
-            locations.Add(new Location(locations.Find(x => x.Name == "Upstairs")) { Name = "Back Bedroom" });
-            locations.Add(new Location(locations.Find(x => x.Name == "Upstairs")) { Name = "Office" });
-            locations.Add(new Location(locations.Find(x => x.Name == "Upstairs")) { Name = "Bathroom" });
-            locations.Add(new Location(locations.Find(x => x.Name == "Upstairs")) { Name = "Upstairs Hall" });
-
-            locations.Add(new Location(locations.Find(x => x.Name == "Downstairs")) { Name = "Kitchen" });
-            locations.Add(new Location(locations.Find(x => x.Name == "Downstairs")) { Name = "Downstairs Hall" });
-            locations.Add(new Location(locations.Find(x => x.Name == "Downstairs")) { Name = "Front Room" });
-
-            // store locations
-            BinarySerialize(locations);
-            locations = null;
-
+            // Create some test data and serialize
+            //GenerateAndSerialize.GenerateAndSerializeData();
 
             // https://social.msdn.microsoft.com/Forums/en-US/c7b7dc5c-b780-49b9-95c9-b637f46c4d68/datacontractserializer-deserialize-a-class-with-a-listt?forum=csharplanguage
             // https://www.bytefish.de/blog/enums_json_net/
             // https://stackoverflow.com/questions/353558/create-pointer-to-parent-object-in-deserialization-process-in-c-sharp
-            Console.WriteLine("Loading....");
 
-            var loc = BinaryDeserialise();
+            Console.WriteLine("Loading data....");
+            var loc = SerializationHelper.BinaryDeserialise();
+            loc.Find(x => x.Name == "Kitchen").TryUpdateState(Trigger.SensorActivity);
+            SerializationHelper.BinarySerialize(loc);
 
 
+            foreach (var l in loc)
+            {
+                string parentName = string.Empty;
+                if (l.Parent == null)
+                {
+                    parentName = "Root";
+                }
+                else
+                {
+                    parentName = l.Parent.Name;
+                }
+                Console.WriteLine($"Location: {l.Name} Parent: {parentName} State: {l.OccupancyState}");
+            }
 
+
+            Console.WriteLine("Press any key to generate data\n");
+            Console.ReadKey();
             // GenerateSomeEvents(backBedroom, kitchen);
             GenerateSomeEvents2(loc.Find(x => x.Name == "Back Bedroom"), loc.Find(x => x.Name == "Kitchen"));
 
@@ -85,56 +51,56 @@ namespace StatelessTest
             Console.ReadKey();
         }
 
-        private static void BinarySerialize(List<Location> locations)
-        {
-            using (var fs = new FileStream("DataFile.dat", FileMode.Create))
-            {
-                var formatter = new BinaryFormatter();
-                try
-                {
-                    formatter.Serialize(fs, locations);
-                }
-                catch (SerializationException e)
-                {
-                    Console.WriteLine("Failed to serialize. Reason: " + e.Message);
-                    throw;
-                }
-                finally
-                {
-                    fs.Close();
-                }
-            }
-        }
+        //private static void BinarySerialize(List<Location> locations)
+        //{
+        //    using (var fs = new FileStream("DataFile.dat", FileMode.Create))
+        //    {
+        //        var formatter = new BinaryFormatter();
+        //        try
+        //        {
+        //            formatter.Serialize(fs, locations);
+        //        }
+        //        catch (SerializationException e)
+        //        {
+        //            Console.WriteLine("Failed to serialize. Reason: " + e.Message);
+        //            throw;
+        //        }
+        //        finally
+        //        {
+        //            fs.Close();
+        //        }
+        //    }
+        //}
 
-        private static List<Location> BinaryDeserialise()
-        {
-            List<Location> deserializedLocations = null;
+        //private static List<Location> BinaryDeserialise()
+        //{
+        //    List<Location> deserializedLocations = null;
 
-            // Open the file containing the data that you want to deserialize.
-            using (var fs = new FileStream("DataFile.dat", FileMode.Open))
-            {
-                try
-                {
-                    var formatter = new BinaryFormatter();
+        //    // Open the file containing the data that you want to deserialize.
+        //    using (var fs = new FileStream("DataFile.dat", FileMode.Open))
+        //    {
+        //        try
+        //        {
+        //            var formatter = new BinaryFormatter();
 
-                    // Deserialize the hashtable from the file and 
-                    // assign the reference to the local variable.
-                    deserializedLocations = (List<Location>)formatter.Deserialize(fs);
-                }
-                catch (SerializationException e)
-                {
-                    Console.WriteLine("Failed to deserialize. Reason: " + e.Message);
-                    throw;
-                }
-                finally
-                {
-                    fs.Close();
-                }
-            }
+        //            // Deserialize the hashtable from the file and 
+        //            // assign the reference to the local variable.
+        //            deserializedLocations = (List<Location>)formatter.Deserialize(fs);
+        //        }
+        //        catch (SerializationException e)
+        //        {
+        //            Console.WriteLine("Failed to deserialize. Reason: " + e.Message);
+        //            throw;
+        //        }
+        //        finally
+        //        {
+        //            fs.Close();
+        //        }
+        //    }
 
 
-            return deserializedLocations;
-        }
+        //    return deserializedLocations;
+        //}
 
         private static Device CreateTestDevice()
         {

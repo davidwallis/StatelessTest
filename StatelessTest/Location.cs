@@ -34,8 +34,8 @@ namespace StatelessTest
         internal void OnDeserializedMethod(StreamingContext context)
         {
             // System.Console.WriteLine("SerRoot.OnDeserializedMethod");
-            _occupancyTimer = new System.Timers.Timer();
-            _stateMachine = CreateStateMachine();
+            this._occupancyTimer = new System.Timers.Timer();
+            this._stateMachine = this.CreateStateMachine(this.OccupancyState);
         }
 
         //[OnSerializing()]
@@ -75,11 +75,11 @@ namespace StatelessTest
         /// </summary>
         /// <returns></returns>
         // TODO look how to inject this..
-        private StateMachine<State, Trigger> CreateStateMachine()
+        private StateMachine<State, Trigger> CreateStateMachine(State initialState = State.UnOccupied)
         {
-            var stateMachine = new StateMachine<State, Trigger>(State.UnOccupied);
+            var stateMachine = new StateMachine<State, Trigger>(initialState);
 
-           // stateMachine.OnTransitioned(OnTransitionedAction);
+            // stateMachine.OnTransitioned(OnTransitionedAction);
 
             stateMachine.Configure(State.UnOccupied)
                 .Permit(Trigger.SensorActivity, State.Occupied)
@@ -212,8 +212,8 @@ namespace StatelessTest
         /// <summary>
         /// Gets or sets the string representation of the timeSpan, XMLSerialisation doesnt support Timespan, so use this property for serialization instead.
         /// </summary>
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
-        [XmlElement(DataType = "duration", ElementName = "OccupancyTimeout")]
+        //[Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        //[XmlElement(DataType = "duration", ElementName = "OccupancyTimeout")]
         public string OccupancyTimeoutString
         {
             get => XmlConvert.ToString(this.OccupancyTimeout);
