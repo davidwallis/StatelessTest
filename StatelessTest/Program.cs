@@ -1,11 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
-using System.Xml;
-using System.Xml.Serialization;
 
 namespace StatelessTest
 {
@@ -15,7 +9,7 @@ namespace StatelessTest
         {
 
             // Create some test data and serialize
-            //GenerateAndSerialize.GenerateAndSerializeData();
+            GenerateAndSerialize.GenerateAndSerializeData();
 
             // https://social.msdn.microsoft.com/Forums/en-US/c7b7dc5c-b780-49b9-95c9-b637f46c4d68/datacontractserializer-deserialize-a-class-with-a-listt?forum=csharplanguage
             // https://www.bytefish.de/blog/enums_json_net/
@@ -23,8 +17,9 @@ namespace StatelessTest
 
             Console.WriteLine("Loading data....");
             var loc = SerializationHelper.BinaryDeserialise();
-            loc.Find(x => x.Name == "Home").OccupancyTimeout = new TimeSpan(0,0,30);
-            Console.WriteLine(loc.Find(x => x.Name == "Home").StateMachineAsDotGraph);
+
+            Console.WriteLine("\nDisplay using: http://www.webgraphviz.com/\n");
+            Console.WriteLine(loc.Find(x => x.Name == "RoundhayCrescent").StateMachineAsDotGraph + "\n");
             
             SerializationHelper.BinarySerialize(loc);
             loc.Find(x => x.Name == "Kitchen").TryUpdateState(Trigger.SensorActivity);
@@ -48,7 +43,7 @@ namespace StatelessTest
             // GenerateSomeEvents(backBedroom, kitchen);
             GenerateSomeEvents2(loc.Find(x => x.Name == "Back Bedroom"), loc.Find(x => x.Name == "Kitchen"));
 
-
+            Console.WriteLine("Press any key to exit\n");
             Console.ReadKey();
         }
 

@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace StatelessTest
 {
@@ -11,19 +8,17 @@ namespace StatelessTest
         public static void GenerateAndSerializeData()
         {
             var locations = new List<Location>();
-            locations.Add(new Location(null) { Name = "Home" });
+            locations.Add(new Location(null) { Name = "RoundhayCrescent" });
 
-
-            locations.Add(new Location(locations.Find(x => x.Name == "Home")) { Name = "House" });
-            locations.Add(new Location(locations.Find(x => x.Name == "Home")) { Name = "Garden" });
+            locations.Add(new Location(locations.Find(x => x.Name == "RoundhayCrescent")) { Name = "House", OccupancyTimeout = new TimeSpan(hours: 0, minutes: 1, seconds: 0) });
+            locations.Add(new Location(locations.Find(x => x.Name == "RoundhayCrescent")) { Name = "Garden", OccupancyTimeout = new TimeSpan(hours: 0, minutes: 1, seconds: 0) });
 
             locations.Add(new Location(locations.Find(x => x.Name == "Garden")) { Name = "Rear Garden" });
             locations.Add(new Location(locations.Find(x => x.Name == "Garden")) { Name = "Front Garden" });
             locations.Add(new Location(locations.Find(x => x.Name == "Garden")) { Name = "Side Garden" });
 
-            locations.Add(new Location(locations.Find(x => x.Name == "Home")) { Name = "House" });
-            locations.Add(new Location(locations.Find(x => x.Name == "House")) { Name = "Upstairs" });
-            locations.Add(new Location(locations.Find(x => x.Name == "House")) { Name = "Downstairs" });
+            locations.Add(new Location(locations.Find(x => x.Name == "House")) { Name = "Upstairs", OccupancyTimeout = new TimeSpan(hours: 0, minutes: 0, seconds: 30) });
+            locations.Add(new Location(locations.Find(x => x.Name == "House")) { Name = "Downstairs", OccupancyTimeout = new TimeSpan(hours: 0, minutes: 0, seconds: 30) });
 
             locations.Add(new Location(locations.Find(x => x.Name == "Upstairs")) { Name = "Front Bedroom" });
             locations.Add(new Location(locations.Find(x => x.Name == "Upstairs")) { Name = "Back Bedroom" });

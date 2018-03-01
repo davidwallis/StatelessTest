@@ -4,10 +4,6 @@
 // https://www.github.com/davidwallis3101
 // </copyright>
 
-using Stateless;
-using System;
-using System.Reactive.Linq;
-
 namespace StatelessTest
 {
     //    [Serializable]
