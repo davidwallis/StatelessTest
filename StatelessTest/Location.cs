@@ -83,45 +83,26 @@ namespace StatelessTest
                 .Permit(Trigger.SensorActivity, State.Occupied)
                 .Permit(Trigger.ChildOccupied, State.ChildOccupied)
                 .PermitReentry(Trigger.AlarmFullSet)
-                .OnEntry(() =>
-                {
-                    Console.WriteLine($"[{this.Name}] UnOccupied, Turn Lights Off");
-                });
+                .OnEntry(this.UnOccupiedOnEntry);
 
             this.stateMachine.Configure(State.Occupied)
                 .Permit(Trigger.AlarmFullSet, State.UnOccupied)
                 .Permit(Trigger.AlarmPartSet, State.Asleep) // add check for which part set (IE dogs or Bed)
                 .Permit(Trigger.OccupancyTimerExpires, State.UnOccupied)
                 .PermitReentry(Trigger.SensorActivity)
-                //.Ignore(Trigger.ChildOccupied)
-                .OnEntry(() =>
-                {
-                    Console.WriteLine($"[{this.Name}] [{this.stateMachine.State}] Occupied, Turn Lights On");
-                    this.StartTimer(this.stateMachine, this.OccupancyTimeout);
-
-                    if (this.Parent?.TryUpdateState(Trigger.ChildOccupied) == true)
-                    {
-                        Console.WriteLine($"[{this.Name}] Occupied, setting parent [{this.Parent.Name}] state to ChildOccupied");
-                    }
-                });
+                // .Ignore(Trigger.ChildOccupied)
+                .OnEntry(this.OccupiedOnEntry);
 
             this.stateMachine.Configure(State.ChildOccupied)
                 //.SubstateOf(State.Occupied)
                 .PermitReentry(Trigger.ChildOccupied)
                 .Permit(Trigger.SensorActivity, State.Occupied)
-                .OnEntry(() =>
-                {
-                    // Console.WriteLine($"{Name} has an occupied child");
-                    if (this.Parent?.TryUpdateState(Trigger.ChildOccupied) == true)
-                    {
-                        Console.WriteLine($"[{this.Name}] ChildOccupied, setting parent [{this.Parent.Name}] state to ChildOccupied");
-                    }
-                });
+                .OnEntry(this.ChildOccupiedOnEntry);
 
             this.stateMachine.Configure(State.Asleep)
                 .SubstateOf(State.Occupied)
                 .Permit(Trigger.AlarmUnset, State.Occupied)
-                .OnEntry(() => { Console.WriteLine($"{this.Name} asleep"); });
+                .OnEntry(this.AsleepOnEntry);
 
             this.stateMachine.OnUnhandledTrigger((state, trigger) =>
             {
@@ -129,6 +110,36 @@ namespace StatelessTest
             });
 
             return this.stateMachine;
+        }
+
+        private void UnOccupiedOnEntry()
+        {
+            Console.WriteLine($"[{this.Name}] UnOccupied, Turn Lights Off");
+        }
+
+        private void AsleepOnEntry()
+        {
+            Console.WriteLine($"{this.Name} asleep"); 
+        }
+
+        private void OccupiedOnEntry()
+        {
+            Console.WriteLine($"[{this.Name}] [{this.stateMachine.State}] Occupied, Turn Lights On");
+            this.StartTimer(this.stateMachine, this.OccupancyTimeout);
+
+            if (this.Parent?.TryUpdateState(Trigger.ChildOccupied) == true)
+            {
+                Console.WriteLine($"[{this.Name}] Occupied, setting parent [{this.Parent.Name}] state to ChildOccupied");
+            }
+        }
+
+        private void ChildOccupiedOnEntry()
+        {
+            // Console.WriteLine($"{Name} has an occupied child");
+            if (this.Parent?.TryUpdateState(Trigger.ChildOccupied) == true)
+            {
+                Console.WriteLine($"[{this.Name}] ChildOccupied, setting parent [{this.Parent.Name}] state to ChildOccupied");
+            }
         }
 
         //private void OnTransitionedAction(StateMachine<State, Trigger>.Transition transition)
