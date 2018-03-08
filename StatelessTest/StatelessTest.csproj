@@ -74,9 +74,13 @@
   <ItemGroup>
     <Compile Include="Device.cs" />
     <Compile Include="GenerateAndSerialize.cs" />
+    <Compile Include="Interfaces\ITimer.cs" />
     <Compile Include="Location.cs" />
     <Compile Include="ModuleReference.cs" />
     <Compile Include="OccupancyStateMachine.cs" />
+    <Compile Include="OccupancyTimer.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Person.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\Annotations.cs" />
@@ -87,7 +91,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="ClassDiagram1.cd" />
     <AdditionalFiles Include="stylecop.json" />
     <None Include="packages.config" />
   </ItemGroup>
@@ -95,5 +98,6 @@
     <Analyzer Include="..\packages\StyleCop.Analyzers.1.0.2\analyzers\dotnet\cs\StyleCop.Analyzers.CodeFixes.dll" />
     <Analyzer Include="..\packages\StyleCop.Analyzers.1.0.2\analyzers\dotnet\cs\StyleCop.Analyzers.dll" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Xml;
 using Stateless;
+using StatelessTest.Interfaces;
 
 namespace StatelessTest
 {
@@ -13,7 +14,6 @@ namespace StatelessTest
     // TODO:
     // use composite disposable for rx timer..
     // see https://sachabarbs.wordpress.com/2013/05/16/simple-but-nice-state-machine/
-
 
     /// <summary>
     /// Location Class, used for storing locations within the home or garden
@@ -31,7 +31,8 @@ namespace StatelessTest
         [OnDeserialized()]
         internal void OnDeserializedMethod(StreamingContext context)
         {
-            this._occupancyTimer = new System.Timers.Timer();
+            this._occupancyTimer = new OccupancyTimer();
+
             this.stateMachine = this.CreateStateMachine(this.OccupancyState);
             this.ResumeTimer(this.stateMachine, this.OccupancyTimeout);
         }
@@ -52,7 +53,7 @@ namespace StatelessTest
         /// The occupancy timer
         /// </summary>
         [NonSerialized]
-        private System.Timers.Timer _occupancyTimer;
+        private ITimer _occupancyTimer;
 
         /// <summary>
         /// The state machine
@@ -352,7 +353,7 @@ namespace StatelessTest
 
             parent?.Children.Add(this);
 
-            this._occupancyTimer = new System.Timers.Timer();
+            this._occupancyTimer = new OccupancyTimer();
             this.stateMachine = this.CreateStateMachine();
         }
 
